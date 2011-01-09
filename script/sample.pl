@@ -26,6 +26,7 @@ my %score_of = (
         english => 80,
     },
     tanaka => {
+        science => 50,
         japanese => 50,
         math => 40,
         english => 40,

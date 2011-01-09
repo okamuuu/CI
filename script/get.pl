@@ -7,18 +7,74 @@ use CI::Algorithm;
 use List::Util qw/shuffle/;
 use List::MoreUtils qw/uniq/;
 use Data::Dumper;
-local $Data::Dumper::Maxdepth = 4;
+local $Data::Dumper::Maxdepth = 2;
+
+my %LIMIT_CNT_OF = ( favorites => 100 );
 
 ### お気に入りの動画を３つほど選択
-my @videos = qw/_Z9q7yun6A4 Kzw8RcNEs_E 2RnwbLmWMgc/;
+### コメントを書いたユーザーは、これらの動画に対して関心を示していると判断
+my @video_ids = qw/_Z9q7yun6A4/; # Kzw8RcNEs_E 2RnwbLmWMgc/;
+my @user_ids  = map { CI::Search->commented_user_ids_of($_) } @video_ids;
+
+my %prefs;
+for my $user_id ( @user_ids ) {
+
+    my %count_of;
+    $count_of{$_}++
+      for map { CI::Search->keywords_of($_) }
+      CI::Search->favorite_video_ids_of($user_id);
+
+    $prefs{$user_id} = {%count_of}; 
+}
+
+warn Dumper {%prefs};
+
+
+__END__
+
+my @users =
+  map { CI::Search->lookup_user($_) } ($user_id);
+#  map { CI::Search->lookup_user($_) } uniq map { $_->author_id } @comments;
+
+#warn Dumper [$users[0]->favorites]->[0];
+
+__END__
+
+#warn Dumper @videos;
 
 ### コメントしているユーザーを取得。
 ### Youtubeを積極的に利用し、動画に関心を示した人たち
-my @commented_users = map { CI::Search->commented_users_to($_) } @videos;
-
-### お気に入り動画を多数登録しているユーザーを探す
+### 彼らがそれぞれ何件の動画をお気に入り登録しているかを求める
 my %count_of =
-  map { $_ => CI::Search->favorite_video_count_of($_) } @commented_users;
+  map { $_ => CI::Search->favorite_video_count_of($_) }
+  map { CI::Search->commented_users_to($_) } @videos;
+
+### お気に入り動画を多数登録している順番でユーザー一覧を求める
+### 動画の登録件数が少ないユーザーを除外しておく
+my @commented_users =
+  reverse sort { $count_of{$a} <=> $count_of{$b} }
+  grep         { $count_of{$_} > $LIMIT_CNT_OF{favorites} }
+  keys %count_of;
+
+### 対象者を２名選抜
+### お気に入り動画のidを探す
+warn my ( $user1, $user2 ) = shuffle @commented_users;
+
+die 'oops!!' unless $user2;
+
+my %user1_favorites = map { $_ => 1 } CI::Search->favorite_videos_of($user1); 
+my %user2_favorites = map { $_ => 1 } CI::Search->favorite_videos_of($user2);
+
+my %favorites_of = (
+    $user1 => {%user1_favorites},
+    $user2 => {%user2_favorites},
+);
+
+my $result = CI::Algorithm->pearson($favorites_of{$user1}, $favorites_of{$user2});
+
+print "user1: $user1\n";
+print "user2: $user2\n";
+print "similar: $result\n";
 
 
 __END__

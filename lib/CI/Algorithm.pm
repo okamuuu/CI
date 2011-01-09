@@ -18,17 +18,15 @@ sub pearson {
     my %seen;
     my @items = grep { $seen{$_}++ } (keys %data1, keys %data2);
     
-    die "not found..." unless scalar @items;
+    die "not found common item..." unless scalar @items;
  
     ### 合計点を求める
-    my $sum1 = sum values %data1;
-    my $sum2 = sum values %data2;
+    my $sum1 = sum map { $data1{$_} } @items;
+    my $sum2 = sum map { $data2{$_} } @items;
 
     ### 平方を合計する。
-    ### ** 2 を使わなかった理由は以下。未検証。
-    ### http://d.hatena.ne.jp/htz/20090223/1235354119
-    my $sum1Sq = sum map { $_ * $_ } values %data1;
-    my $sum2Sq = sum map { $_ * $_ } values %data2;
+    my $sum1Sq = sum map { $data1{$_} ** 2 } @items;
+    my $sum2Sq = sum map { $data2{$_} ** 2 } @items;
 
     ### 積を合計
     my $pSum = sum map { ( $data1{$_} ) * ( $data2{$_} ) } @items;
@@ -42,9 +40,7 @@ sub pearson {
             ( $sum2Sq - ( $sum2 * $sum2 ) / $n ) 
       ) or die('calc result is 0');
 
-    my $r = $num / $den;
-    return $r;
-
+    return $num / $den; # more than -1, less than 1
 }
 
 1;
