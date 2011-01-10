@@ -1,4 +1,4 @@
-package CI::Algorithm;
+package CI::Algorithm::Pearson;
 use strict;
 use warnings;
 use List::Util qw/sum/;
@@ -7,7 +7,7 @@ use Carp ();
 
 ### 真似した
 ### http://d.hatena.ne.jp/rin1024/20090411/1239464111
-sub pearson {
+sub calc {
     my ($class, $data1, $data2 ) = @_;
 
     ### local copy
@@ -18,7 +18,7 @@ sub pearson {
     my %seen;
     my @items = grep { $seen{$_}++ } (keys %data1, keys %data2);
     
-    die "not found common item..." unless scalar @items;
+    Carp::croak "not found common item..." unless scalar @items;
  
     ### 合計点を求める
     my $sum1 = sum map { $data1{$_} } @items;
@@ -38,7 +38,9 @@ sub pearson {
       sqrt ( 
             ( $sum1Sq - ( $sum1 * $sum1 ) / $n ) *
             ( $sum2Sq - ( $sum2 * $sum2 ) / $n ) 
-      ) or die('calc result is 0');
+      );
+
+    if ( $den == 0 ) { Carp::croak 'calc result is 0'; }
 
     return $num / $den; # more than -1, less than 1
 }

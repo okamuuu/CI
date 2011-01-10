@@ -14,10 +14,12 @@ my %LIMIT_CNT_OF = ( favorites => 100 );
 ### お気に入りの動画を３つほど選択
 ### コメントを書いたユーザーは、これらの動画に対して関心を示していると判断
 my @video_ids = qw/_Z9q7yun6A4/; # Kzw8RcNEs_E 2RnwbLmWMgc/;
-my @user_ids  = map { CI::Search->commented_user_ids_of($_) } @video_ids;
+my ($user1_id, $user2_id) = shuffle map { CI::Search->commented_user_ids_of($_) } @video_ids;
+
+my $user3_id = 'HektikVImpakt';
 
 my %prefs;
-for my $user_id ( @user_ids ) {
+for my $user_id ( $user1_id, $user2_id, $user3_id ) {
 
     my %count_of;
     $count_of{$_}++
@@ -29,6 +31,18 @@ for my $user_id ( @user_ids ) {
 
 warn Dumper {%prefs};
 
+compare($user1_id, $user2_id);
+compare($user2_id, $user3_id);
+compare($user3_id, $user1_id);
+
+sub compare {
+    my ( $user1, $user2 ) = @_;
+    
+    my $result = CI::Algorithm->pearson($prefs{$user1}, $prefs{$user2});
+
+    warn "$user1 & $user2";
+    warn "result : $result\n";
+}
 
 __END__
 

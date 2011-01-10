@@ -2,12 +2,13 @@
 use strict;
 use warnings;
 use lib 'lib';
-use CI::Search;
-use CI::Algorithm;
+use CI::Algorithm::Pearson;
 use List::Util qw/shuffle/;
 use List::MoreUtils qw/uniq/;
+use Perl6::Say;
+
 use Data::Dumper;
-local $Data::Dumper::Maxdepth = 4;
+local $Data::Dumper::Maxdepth = 3;
 
 my %score_of = (
     suzuki => {
@@ -34,11 +35,15 @@ my %score_of = (
 );  
 
 my $result; 
-print $result = CI::Algorithm->pearson($score_of{suzuki},$score_of{sato});
-print "\n\n";
-print $result = CI::Algorithm->pearson($score_of{suzuki},$score_of{yamada});
-print "\n\n";
-print $result = CI::Algorithm->pearson($score_of{yamada},$score_of{tanaka});
+
+say "suzuki & sato";
+say $result = CI::Algorithm::Pearson->calc($score_of{suzuki},$score_of{sato});
+say;
+say "suzuki & yamada"; 
+say $result = CI::Algorithm::Pearson->calc($score_of{suzuki},$score_of{yamada});
+say;
+say "yamada & tanaka";
+say $result = CI::Algorithm::Pearson->calc($score_of{yamada},$score_of{tanaka});
 
 
 
