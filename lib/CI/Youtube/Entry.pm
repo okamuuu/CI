@@ -1,6 +1,7 @@
 package CI::Youtube::Entry;
 use strict;
 use warnings;
+use Sub::Retry;
 use Cache::FileCache;
 use WebService::Simple;
 use URI;
@@ -97,7 +98,8 @@ sub _get_data_from {
 #        response_parser => 'JSON',
     );
 
-    my $response = eval { $ws->get };
+#    my $response = eval { $ws->get };
+    my $response = retry 3, 1, sub { $ws->get };
     
     if ( $@ ) {
         warn $@;
