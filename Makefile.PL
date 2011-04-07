@@ -2,8 +2,9 @@ use inc::Module::Install;
 name 'CI';
 all_from 'lib/CI.pm';
 
-# requires '';
-
+requires 'Sub::Retry';
+requires 'Cache::FileCache';
+requires 'WebService::Simple';
 tests 't/*.t';
 author_tests 'xt';
 
