@@ -1,9 +1,7 @@
 package CI::Youtube::Entry;
 use strict;
 use warnings;
-use Sub::Retry;
-use Cache::FileCache;
-use WebService::Simple;
+use CI::WebService;
 use URI;
 use JSON ();
 
@@ -83,31 +81,9 @@ sub _search_entries {
 sub _get_data_from {
     my ( $class, $uri ) = @_;
 
-    my $cache = Cache::FileCache->new(
-        {
-            namespace          => 'MyNamespace',
-            default_expires_in => 24 * 60 * 60,
-        }
-    );
+    my $ws = CI::WebService->new;
+    my $content = $ws->get($uri);
 
-    ### キャッシュ機能使いたい
-    my $ws = WebService::Simple->new(
-        base_url        => $uri,
-        cache           => $cache,
-# こうじゃなかったっけ？動かないのでParseは自分でしておく
-#        response_parser => 'JSON',
-    );
-
-#    my $response = eval { $ws->get };
-    my $response = retry 3, 1, sub { $ws->get };
-    
-    if ( $@ ) {
-        warn $@;
-        return;
-    }
-        
-    my $content = $response->decoded_content;
-  
     return JSON::decode_json($content);
 }
 
