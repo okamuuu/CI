@@ -8,22 +8,9 @@ use LWP::UserAgent;
 use Cache::FileCache;
 
 sub new {
-    my $class = shift;
-
-    my $ua = LWP::UserAgent->new;
-    $ua->timeout(10);
-    $ua->env_proxy;
-
-    my $cache = Cache::FileCache->new(
-        {  
-            namespace          => 'MyNamespace',
-            default_expires_in => 24 * 60 * 60,
-        }
-    );
-
     return bless {
-        _ua    => $ua,
-        _cache => $cache,
+        _ua    => $_[0]->_create_ua(),
+        _cache => $_[0]->_create_cache(),
     };
 }
 
@@ -33,8 +20,11 @@ sub cache { $_[0]->{_cache} }
 sub get {
     my ( $self, $uri ) = @_;
 
-    my $response = $self->__cache_get( [ $uri, 'GET' ] )
-      || retry 3, 1, sub { $self->ua->get($uri) };
+    my $content = $self->__cache_get( [ $uri, 'GET' ] );
+    
+    return $content if $content;
+
+    my $response = retry 3, 1, sub { $self->ua->get($uri) };
 
     if ( $@ ) {
         warn $@;
@@ -73,6 +63,23 @@ sub __cache_key {
     local $Data::Dumper::Terse    = 1;
     local $Data::Dumper::Sortkeys = 1;
     return Digest::MD5::md5_hex( Data::Dumper::Dumper( $_[0] ) );
+}
+
+sub _create_ua {
+    my $ua = LWP::UserAgent->new;
+    $ua->timeout(10);
+    $ua->env_proxy;
+
+    return $ua;
+}
+
+sub _create_cache {
+    return Cache::FileCache->new(
+        {  
+            namespace          => 'MyNamespace',
+            default_expires_in => 24 * 60 * 60,
+        }
+    );
 }
 
 1;
